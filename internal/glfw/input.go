@@ -81,6 +81,12 @@ func (w *Window) inputScroll(wheelX, wheelY, scrollDeltaX, scrollDeltaY float64,
 	}
 }
 
+func (w *Window) inputPinch(delta float64) {
+	if w.callbacks.pinch != nil {
+		w.callbacks.pinch(w, delta)
+	}
+}
+
 func (w *Window) inputMouseClick(button MouseButton, action Action, mods ModifierKey) {
 	if button < 0 || button > MouseButtonLast {
 		return
@@ -516,6 +522,17 @@ func (w *Window) SetScrollCallback(cbfun ScrollCallback) (ScrollCallback, error)
 	}
 	old := w.callbacks.scroll
 	w.callbacks.scroll = cbfun
+	return old, nil
+}
+
+// SetPinchCallback sets the callback for a pinch gesture on a touchpad.
+// The callback is called only on macOS so far.
+func (w *Window) SetPinchCallback(cbfun PinchCallback) (PinchCallback, error) {
+	if !_glfw.initialized {
+		return nil, NotInitialized
+	}
+	old := w.callbacks.pinch
+	w.callbacks.pinch = cbfun
 	return old, nil
 }
 

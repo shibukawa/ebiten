@@ -147,6 +147,23 @@ func ScrollDelta() (x, y float64) {
 	return inputstate.Get().ScrollDelta()
 }
 
+// PinchDelta returns the amount of a pinch gesture on a touchpad, as the change of the scale it asks for.
+// It returns 0 if no pinch gesture is being done.
+//
+// A positive value is a request to magnify, as when two fingers move apart, and a negative value is
+// a request to shrink. To follow the gesture, multiply the scale by 1 + the returned value at each tick.
+// For example, 0.05 asks to make things 5% larger.
+//
+// PinchDelta does not report pinching on a touch screen. Use [AppendTouchIDs] and [TouchPosition]
+// for that.
+//
+// PinchDelta always returns 0 on platforms other than macOS so far.
+//
+// PinchDelta is concurrent-safe.
+func PinchDelta() float64 {
+	return inputstate.Get().PinchDelta()
+}
+
 // IsMouseButtonPressed returns a boolean indicating whether mouseButton is pressed.
 //
 // If you want to know whether the mouseButton started being pressed in the current tick,
