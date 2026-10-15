@@ -157,8 +157,9 @@ func ScrollDelta() (x, y float64) {
 // PinchDelta does not report pinching on a touch screen. Use [AppendTouchIDs] and [TouchPosition]
 // for that.
 //
-// PinchDelta reports gestures on macOS, and on Linux and other platforms with X11 when the X server
-// supports XInput 2.4 (X.Org Server 21.1 or Xwayland 22.1 and later) and libXi is 1.8 or later.
+// PinchDelta reports gestures on macOS, on Windows 10 and later with a precision touchpad
+// (on 386 and amd64 so far), and on Linux and other platforms with X11 when the X server supports
+// XInput 2.4 (X.Org Server 21.1 or Xwayland 22.1 and later) and libXi is 1.8 or later.
 // PinchDelta always returns 0 on the other platforms so far.
 //
 // PinchDelta is concurrent-safe.
