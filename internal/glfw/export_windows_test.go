@@ -14,6 +14,10 @@
 
 package glfw
 
+import (
+	"unsafe"
+)
+
 func PackPoint64(x, y int32) uint64 {
 	return (_POINT{x: x, y: y}).pack64()
 }
@@ -25,3 +29,29 @@ func WheelScrollAmount(notches float64, setting uint32) (float64, ScrollUnit) {
 }
 
 var SetFocusForTesting = _SetFocus
+
+type DirectManipulationGesture struct {
+	g directManipulationGesture
+}
+
+func NewDirectManipulationGesture() *DirectManipulationGesture {
+	return &DirectManipulationGesture{
+		g: newDirectManipulationGesture(),
+	}
+}
+
+func (d *DirectManipulationGesture) Transform(m [6]float32) (panX, panY, pinch float64) {
+	return d.g.transform(m)
+}
+
+// DirectManipulationVtblSlots returns the number of methods in each vtable, which must match
+// directmanipulation.idl.
+func DirectManipulationVtblSlots() map[string]uintptr {
+	ptr := unsafe.Sizeof(uintptr(0))
+	return map[string]uintptr{
+		"IDirectManipulationManager":       unsafe.Sizeof(_IDirectManipulationManager_Vtbl{}) / ptr,
+		"IDirectManipulationUpdateManager": unsafe.Sizeof(_IDirectManipulationUpdateManager_Vtbl{}) / ptr,
+		"IDirectManipulationViewport":      unsafe.Sizeof(_IDirectManipulationViewport_Vtbl{}) / ptr,
+		"IDirectManipulationContent":       unsafe.Sizeof(_IDirectManipulationContent_Vtbl{}) / ptr,
+	}
+}
