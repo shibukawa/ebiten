@@ -257,7 +257,7 @@ public class EbitenView extends ViewGroup implements InputManager.InputDeviceLis
             return true;
         }
 
-        updateTouchScreenPinch(e);
+        updateTouchScreenGesture(e);
 
         // getActionIndex returns a valid value only for the action whose index is the returned value of getActionIndex (#2220).
         // See https://developer.android.com/reference/android/view/MotionEvent#getActionMasked().
@@ -283,48 +283,70 @@ public class EbitenView extends ViewGroup implements InputManager.InputDeviceLis
         return true;
     }
 
-    // touchScreenPinchDistance is the distance between the two fingers at the last sample of a pinch on a
-    // touch screen, or 0 when no pinch is being done.
-    private float touchScreenPinchDistance = 0;
+    // touchScreenGestureDistance and touchScreenGestureAngle are the distance and the angle between the two
+    // fingers at the last sample of a gesture on a touch screen. touchScreenGestureDistance is 0 when no
+    // gesture is being done.
+    private float touchScreenGestureDistance = 0;
+    private double touchScreenGestureAngle = 0;
 
-    // updateTouchScreenPinch reports a pinch with exactly two fingers on a touch screen as a pinch, in addition
-    // to the touches.
-    private void updateTouchScreenPinch(MotionEvent e) {
+    // updateTouchScreenGesture reports moving exactly two fingers on a touch screen as a pinch and a rotation,
+    // in addition to the touches.
+    private void updateTouchScreenGesture(MotionEvent e) {
         if ((e.getSource() & InputDevice.SOURCE_TOUCHSCREEN) != InputDevice.SOURCE_TOUCHSCREEN || e.getPointerCount() != 2) {
-            touchScreenPinchDistance = 0;
+            touchScreenGestureDistance = 0;
             return;
         }
         switch (e.getActionMasked()) {
         case MotionEvent.ACTION_POINTER_DOWN:
-            // The second finger starts a pinch.
-            touchScreenPinchDistance = (float)Math.hypot(e.getX(1) - e.getX(0), e.getY(1) - e.getY(0));
+            // The second finger starts a gesture.
+            touchScreenGestureDistance = (float)Math.hypot(e.getX(1) - e.getX(0), e.getY(1) - e.getY(0));
+            touchScreenGestureAngle = Math.atan2(e.getY(1) - e.getY(0), e.getX(1) - e.getX(0));
             return;
         case MotionEvent.ACTION_MOVE:
             break;
         default:
-            touchScreenPinchDistance = 0;
+            touchScreenGestureDistance = 0;
             return;
         }
 
-        // Each sample, including the batched ones, adds the change of the distance relative to the previous sample.
-        double delta = 0;
+        // Each sample, including the batched ones, adds the changes of the distance and the angle relative to
+        // the previous sample.
+        double pinch = 0;
+        double rotation = 0;
         for (int h = 0; h <= e.getHistorySize(); h++) {
-            float d;
+            float dx, dy;
             if (h < e.getHistorySize()) {
-                d = (float)Math.hypot(e.getHistoricalX(1, h) - e.getHistoricalX(0, h), e.getHistoricalY(1, h) - e.getHistoricalY(0, h));
+                dx = e.getHistoricalX(1, h) - e.getHistoricalX(0, h);
+                dy = e.getHistoricalY(1, h) - e.getHistoricalY(0, h);
             } else {
-                d = (float)Math.hypot(e.getX(1) - e.getX(0), e.getY(1) - e.getY(0));
+                dx = e.getX(1) - e.getX(0);
+                dy = e.getY(1) - e.getY(0);
             }
+            float d = (float)Math.hypot(dx, dy);
             if (d <= 0) {
                 continue;
             }
-            if (touchScreenPinchDistance > 0) {
-                delta += d / touchScreenPinchDistance - 1.0;
+            // As the Y axis points down, an increasing angle is clockwise.
+            double a = Math.atan2(dy, dx);
+            if (touchScreenGestureDistance > 0) {
+                pinch += d / touchScreenGestureDistance - 1.0;
+                double da = a - touchScreenGestureAngle;
+                // Take the shorter way around, as the angle wraps at ±pi.
+                if (da > Math.PI) {
+                    da -= 2 * Math.PI;
+                } else if (da < -Math.PI) {
+                    da += 2 * Math.PI;
+                }
+                rotation += da;
             }
-            touchScreenPinchDistance = d;
+            touchScreenGestureDistance = d;
+            touchScreenGestureAngle = a;
         }
-        if (delta != 0) {
-            Ebitenmobileview.updatePinch(delta);
+        if (pinch != 0) {
+            Ebitenmobileview.updatePinch(pinch);
+        }
+        if (rotation != 0) {
+            Ebitenmobileview.updateRotation(rotation);
         }
     }
 

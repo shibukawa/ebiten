@@ -170,6 +170,24 @@ func PinchDelta() float64 {
 	return inputstate.Get().PinchDelta()
 }
 
+// RotationDelta returns the angle a rotation gesture with two fingers turns by at the current tick, in radians.
+// It returns 0 if no rotation gesture is being done.
+//
+// A positive value is clockwise, as with [GeoM.Rotate]. To follow the gesture, add the returned value
+// to the angle at each tick.
+//
+// RotationDelta reports gestures on a touchpad on macOS, and on Linux and other platforms with X11
+// under the same conditions as [PinchDelta]. On iOS and Android, RotationDelta also reports turning
+// two fingers on the touch screen, and the fingers are still reported by [AppendTouchIDs] and
+// [TouchPosition]. On iOS, a rotation on a trackpad is reported as well.
+// RotationDelta always returns 0 on the other platforms so far, including Windows and Android with
+// a touchpad, whose touchpad gestures have no rotation.
+//
+// RotationDelta is concurrent-safe.
+func RotationDelta() float64 {
+	return inputstate.Get().RotationDelta()
+}
+
 // IsMouseButtonPressed returns a boolean indicating whether mouseButton is pressed.
 //
 // If you want to know whether the mouseButton started being pressed in the current tick,

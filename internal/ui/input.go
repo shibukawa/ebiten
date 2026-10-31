@@ -148,6 +148,7 @@ type InputState struct {
 	ScrollDeltaX      float64
 	ScrollDeltaY      float64
 	PinchDelta        float64
+	RotationDelta     float64
 	Touches           []Touch
 	Runes             []rune
 	WindowBeingClosed bool
@@ -387,6 +388,7 @@ func (i *InputState) copyAndReset(dst *InputState) {
 	dst.ScrollDeltaX = i.ScrollDeltaX
 	dst.ScrollDeltaY = i.ScrollDeltaY
 	dst.PinchDelta = i.PinchDelta
+	dst.RotationDelta = i.RotationDelta
 	dst.Touches = append(dst.Touches[:0], i.Touches...)
 	dst.Runes = append(dst.Runes[:0], i.Runes...)
 	dst.WindowBeingClosed = i.WindowBeingClosed
@@ -400,6 +402,7 @@ func (i *InputState) copyAndReset(dst *InputState) {
 	i.ScrollDeltaX = 0
 	i.ScrollDeltaY = 0
 	i.PinchDelta = 0
+	i.RotationDelta = 0
 	i.Runes = i.Runes[:0]
 
 	// Reset the members that are never reset until they are explicitly done.

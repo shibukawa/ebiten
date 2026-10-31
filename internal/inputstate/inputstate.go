@@ -174,6 +174,12 @@ func (i *inputState) PinchDelta() float64 {
 	return i.state.PinchDelta
 }
 
+func (i *inputState) RotationDelta() float64 {
+	i.m.Lock()
+	defer i.m.Unlock()
+	return i.state.RotationDelta
+}
+
 func AppendTouchIDs[T ~int](touches []T) []T {
 	theInputState.m.Lock()
 	defer theInputState.m.Unlock()

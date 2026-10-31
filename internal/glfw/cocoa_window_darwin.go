@@ -608,6 +608,21 @@ func registerGLFWClasses() error {
 					}
 				},
 			},
+			// Rotation gesture on a touchpad.
+			{
+				Cmd: objc.RegisterName("rotateWithEvent:"),
+				Fn: func(self objc.ID, _ objc.SEL, event objc.ID) {
+					window := getGoWindow(self)
+					if window == nil {
+						return
+					}
+					// rotation is the angle since the previous event of the gesture, in degrees, and is a
+					// float, not a CGFloat. A positive value is counterclockwise.
+					if deg := objc.Send[float32](event, sel_rotation); deg != 0 {
+						window.inputRotate(-float64(deg) * math.Pi / 180)
+					}
+				},
+			},
 			// View lifecycle.
 			{
 				Cmd: objc.RegisterName("viewDidChangeBackingProperties"),

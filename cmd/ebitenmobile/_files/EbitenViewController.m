@@ -20,7 +20,7 @@
 
 #import "$Placeholder_Prefix$Ebitenmobileview.objc.h"
 
-@interface $Placeholder_PrefixUpper$EbitenViewController : UIViewController<$Placeholder_Prefix$EbitenmobileviewRenderer, $Placeholder_Prefix$EbitenmobileviewSetGameNotifier>
+@interface $Placeholder_PrefixUpper$EbitenViewController : UIViewController<$Placeholder_Prefix$EbitenmobileviewRenderer, $Placeholder_Prefix$EbitenmobileviewSetGameNotifier, UIGestureRecognizerDelegate>
 @end
 
 @implementation $Placeholder_PrefixUpper$EbitenViewController {
@@ -114,14 +114,20 @@
   }
   [self.view addSubview: gameView];
 
-  // Report pinch gestures on the touch screen and on a trackpad. The touches of a pinch on the touch
-  // screen must still be reported as touches, so the recognizer neither cancels nor delays them.
+  // Report pinch and rotation gestures on the touch screen and on a trackpad. The touches of a gesture on
+  // the touch screen must still be reported as touches, so the recognizers neither cancel nor delay them.
+  // The delegate lets both recognize the same gesture.
   UIPinchGestureRecognizer* pinch = [[UIPinchGestureRecognizer alloc] initWithTarget:self
                                                                               action:@selector(handlePinch:)];
-  pinch.cancelsTouchesInView = NO;
-  pinch.delaysTouchesBegan = NO;
-  pinch.delaysTouchesEnded = NO;
-  [gameView addGestureRecognizer:pinch];
+  UIRotationGestureRecognizer* rotation = [[UIRotationGestureRecognizer alloc] initWithTarget:self
+                                                                                       action:@selector(handleRotation:)];
+  for (UIGestureRecognizer* recognizer in @[pinch, rotation]) {
+    recognizer.cancelsTouchesInView = NO;
+    recognizer.delaysTouchesBegan = NO;
+    recognizer.delaysTouchesEnded = NO;
+    recognizer.delegate = self;
+    [gameView addGestureRecognizer:recognizer];
+  }
 
   $Placeholder_Prefix$EbitenmobileviewSetUIView((uintptr_t)(gameView), &err);
   if (err != nil) {
@@ -344,6 +350,28 @@
   CGFloat scale = recognizer.scale;
   recognizer.scale = 1;
   $Placeholder_Prefix$EbitenmobileviewUpdatePinch(scale - 1);
+}
+
+- (void)handleRotation:(UIRotationGestureRecognizer*)recognizer {
+  if (!started_) {
+    return;
+  }
+  if (recognizer.state != UIGestureRecognizerStateBegan &&
+      recognizer.state != UIGestureRecognizerStateChanged) {
+    return;
+  }
+
+  // The rotation is relative to the start of the gesture, in radians, and is clockwise as the Y axis points
+  // down. Reset it so that each call reports the change since the last call.
+  CGFloat rotation = recognizer.rotation;
+  recognizer.rotation = 0;
+  $Placeholder_Prefix$EbitenmobileviewUpdateRotation(rotation);
+}
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer*)gestureRecognizer
+    shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer*)otherGestureRecognizer {
+  // A pinch and a rotation are often done at the same time.
+  return YES;
 }
 
 - (void)updatePresses:(NSSet<UIPress *> *)presses {

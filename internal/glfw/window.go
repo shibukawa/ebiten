@@ -340,6 +340,7 @@ func (w *Window) Destroy() error {
 	w.callbacks.cursorEnter = nil
 	w.callbacks.scroll = nil
 	w.callbacks.pinch = nil
+	w.callbacks.rotate = nil
 	w.callbacks.key = nil
 	w.callbacks.character = nil
 	w.callbacks.charmods = nil

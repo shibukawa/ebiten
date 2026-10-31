@@ -87,6 +87,12 @@ func (w *Window) inputPinch(delta float64) {
 	}
 }
 
+func (w *Window) inputRotate(delta float64) {
+	if w.callbacks.rotate != nil {
+		w.callbacks.rotate(w, delta)
+	}
+}
+
 func (w *Window) inputMouseClick(button MouseButton, action Action, mods ModifierKey) {
 	if button < 0 || button > MouseButtonLast {
 		return
@@ -534,6 +540,17 @@ func (w *Window) SetPinchCallback(cbfun PinchCallback) (PinchCallback, error) {
 	}
 	old := w.callbacks.pinch
 	w.callbacks.pinch = cbfun
+	return old, nil
+}
+
+// SetRotateCallback sets the callback for a rotation gesture on a touchpad.
+// The callback is called only on macOS and on X11 with XInput 2.4 so far.
+func (w *Window) SetRotateCallback(cbfun RotateCallback) (RotateCallback, error) {
+	if !_glfw.initialized {
+		return nil, NotInitialized
+	}
+	old := w.callbacks.rotate
+	w.callbacks.rotate = cbfun
 	return old, nil
 }
 

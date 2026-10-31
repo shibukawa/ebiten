@@ -80,3 +80,9 @@ func updateInput(runes []rune) {
 func UpdatePinch(delta float64) {
 	ui.Get().UpdatePinch(delta)
 }
+
+// UpdateRotation reports a rotation gesture with two fingers on a touchpad or a touch screen, as the angle
+// it turns by since the last call, in radians. A positive value is clockwise.
+func UpdateRotation(delta float64) {
+	ui.Get().UpdateRotation(delta)
+}

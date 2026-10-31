@@ -71,6 +71,10 @@ func (i *glfwInput) HandlePinchForTest(delta float64) {
 	i.handlePinch(delta)
 }
 
+func (i *glfwInput) HandleRotateForTest(delta float64) {
+	i.handleRotate(delta)
+}
+
 func (i *glfwInput) SetContentSizeForTest(width, height float64) {
 	i.setContentSize(width, height)
 }

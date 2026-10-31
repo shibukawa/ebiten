@@ -624,17 +624,32 @@ func (p *xiPinch) delta(evtype int32, scale float64) float64 {
 	return scale/prev - 1
 }
 
-// xiGesturePinchEvent reports a touchpad pinch gesture to the window it happens on.
+// xiRotation returns the angle an event of a pinch gesture turns by, in radians. XInput reports the angle
+// since the previous event in degrees, clockwise, as libinput does. Only update events turn.
+func xiRotation(evtype int32, deltaAngle float64) float64 {
+	if evtype != _XI_GesturePinchUpdate || math.IsNaN(deltaAngle) || math.IsInf(deltaAngle, 0) {
+		return 0
+	}
+	return deltaAngle * math.Pi / 180
+}
+
+// xiGesturePinchEvent reports a touchpad pinch gesture, with its rotation, to the window it happens on.
 func xiGesturePinchEvent(e *_XIGesturePinchEvent) {
 	delta := _glfw.platformWindow.xi.pinch.delta(e.Evtype, e.Scale)
-	if delta == 0 {
+	angle := xiRotation(e.Evtype, e.DeltaAngle)
+	if delta == 0 && angle == 0 {
 		return
 	}
 	window := _glfw.platformWindow.windowsByXID[e.Event]
 	if window == nil {
 		return
 	}
-	window.inputPinch(delta)
+	if delta != 0 {
+		window.inputPinch(delta)
+	}
+	if angle != 0 {
+		window.inputRotate(angle)
+	}
 }
 
 // xiScrollAxesFromClasses reads the scroll axes out of a device class list (from XIQueryDevice or an

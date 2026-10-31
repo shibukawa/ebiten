@@ -66,3 +66,24 @@ func TestXIPinchDeltas(t *testing.T) {
 		}
 	}
 }
+
+// TestXIRotation tests that the angles XInput reports in degrees become radians, and that only update
+// events turn.
+func TestXIRotation(t *testing.T) {
+	for _, tt := range []struct {
+		evtype     int32
+		deltaAngle float64
+		want       float64
+	}{
+		{glfw.XIGesturePinchBeginForTest, 10, 0},
+		{glfw.XIGesturePinchUpdateForTest, 90, math.Pi / 2},
+		{glfw.XIGesturePinchUpdateForTest, -45, -math.Pi / 4},
+		{glfw.XIGesturePinchUpdateForTest, math.NaN(), 0},
+		{glfw.XIGesturePinchUpdateForTest, math.Inf(1), 0},
+		{glfw.XIGesturePinchEndForTest, 10, 0},
+	} {
+		if got := glfw.XIRotationForTest(tt.evtype, tt.deltaAngle); math.Abs(got-tt.want) > 1e-12 {
+			t.Errorf("XIRotationForTest(%d, %v): got %v, want %v", tt.evtype, tt.deltaAngle, got, tt.want)
+		}
+	}
+}
