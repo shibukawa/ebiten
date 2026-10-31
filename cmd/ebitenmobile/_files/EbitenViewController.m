@@ -343,7 +343,7 @@
   // since the last call.
   CGFloat scale = recognizer.scale;
   recognizer.scale = 1;
-  $Placeholder_Prefix$EbitenmobileviewUpdatePinchOnIOS(scale - 1);
+  $Placeholder_Prefix$EbitenmobileviewUpdatePinch(scale - 1);
 }
 
 - (void)updatePresses:(NSSet<UIPress *> *)presses {

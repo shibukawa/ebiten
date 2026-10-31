@@ -234,8 +234,31 @@ public class EbitenView extends ViewGroup implements InputManager.InputDeviceLis
         return true;
     }
 
+    // MotionEvent.CLASSIFICATION_PINCH and MotionEvent.AXIS_GESTURE_PINCH_SCALE_FACTOR, which were added in API level 34.
+    private static final int CLASSIFICATION_PINCH = 5;
+    private static final int AXIS_GESTURE_PINCH_SCALE_FACTOR = 52;
+
     @Override
     public boolean onTouchEvent(MotionEvent e) {
+        // A pinch on a touchpad is delivered as two fake fingers around the cursor. Report it as a pinch
+        // instead of touches, as the other platforms do.
+        if (Build.VERSION.SDK_INT >= 34 && e.getClassification() == CLASSIFICATION_PINCH) {
+            if (e.getActionMasked() == MotionEvent.ACTION_MOVE) {
+                // The scale factor of each sample is relative to the previous sample, including the batched ones.
+                double delta = 0;
+                for (int h = 0; h < e.getHistorySize(); h++) {
+                    delta += e.getHistoricalAxisValue(AXIS_GESTURE_PINCH_SCALE_FACTOR, 0, h) - 1.0;
+                }
+                delta += e.getAxisValue(AXIS_GESTURE_PINCH_SCALE_FACTOR, 0) - 1.0;
+                if (delta != 0) {
+                    Ebitenmobileview.updatePinch(delta);
+                }
+            }
+            return true;
+        }
+
+        updateTouchScreenPinch(e);
+
         // getActionIndex returns a valid value only for the action whose index is the returned value of getActionIndex (#2220).
         // See https://developer.android.com/reference/android/view/MotionEvent#getActionMasked().
         // For other pointers, treat their actions as MotionEvent.ACTION_MOVE.
@@ -258,6 +281,51 @@ public class EbitenView extends ViewGroup implements InputManager.InputDeviceLis
             Ebitenmobileview.updateTouchesOnAndroid(action, id, pxToDp(x), pxToDp(y));
         }
         return true;
+    }
+
+    // touchScreenPinchDistance is the distance between the two fingers at the last sample of a pinch on a
+    // touch screen, or 0 when no pinch is being done.
+    private float touchScreenPinchDistance = 0;
+
+    // updateTouchScreenPinch reports a pinch with exactly two fingers on a touch screen as a pinch, in addition
+    // to the touches.
+    private void updateTouchScreenPinch(MotionEvent e) {
+        if ((e.getSource() & InputDevice.SOURCE_TOUCHSCREEN) != InputDevice.SOURCE_TOUCHSCREEN || e.getPointerCount() != 2) {
+            touchScreenPinchDistance = 0;
+            return;
+        }
+        switch (e.getActionMasked()) {
+        case MotionEvent.ACTION_POINTER_DOWN:
+            // The second finger starts a pinch.
+            touchScreenPinchDistance = (float)Math.hypot(e.getX(1) - e.getX(0), e.getY(1) - e.getY(0));
+            return;
+        case MotionEvent.ACTION_MOVE:
+            break;
+        default:
+            touchScreenPinchDistance = 0;
+            return;
+        }
+
+        // Each sample, including the batched ones, adds the change of the distance relative to the previous sample.
+        double delta = 0;
+        for (int h = 0; h <= e.getHistorySize(); h++) {
+            float d;
+            if (h < e.getHistorySize()) {
+                d = (float)Math.hypot(e.getHistoricalX(1, h) - e.getHistoricalX(0, h), e.getHistoricalY(1, h) - e.getHistoricalY(0, h));
+            } else {
+                d = (float)Math.hypot(e.getX(1) - e.getX(0), e.getY(1) - e.getY(0));
+            }
+            if (d <= 0) {
+                continue;
+            }
+            if (touchScreenPinchDistance > 0) {
+                delta += d / touchScreenPinchDistance - 1.0;
+            }
+            touchScreenPinchDistance = d;
+        }
+        if (delta != 0) {
+            Ebitenmobileview.updatePinch(delta);
+        }
     }
 
     private Gamepad getGamepad(int deviceId) {
