@@ -114,6 +114,15 @@
   }
   [self.view addSubview: gameView];
 
+  // Report pinch gestures on the touch screen and on a trackpad. The touches of a pinch on the touch
+  // screen must still be reported as touches, so the recognizer neither cancels nor delays them.
+  UIPinchGestureRecognizer* pinch = [[UIPinchGestureRecognizer alloc] initWithTarget:self
+                                                                              action:@selector(handlePinch:)];
+  pinch.cancelsTouchesInView = NO;
+  pinch.delaysTouchesBegan = NO;
+  pinch.delaysTouchesEnded = NO;
+  [gameView addGestureRecognizer:pinch];
+
   $Placeholder_Prefix$EbitenmobileviewSetUIView((uintptr_t)(gameView), &err);
   if (err != nil) {
     [self onErrorOnGameUpdate:err];
@@ -319,6 +328,22 @@
 
 - (void)touchesCancelled:(NSSet*)touches withEvent:(UIEvent*)event {
   [self updateTouches:touches];
+}
+
+- (void)handlePinch:(UIPinchGestureRecognizer*)recognizer {
+  if (!started_) {
+    return;
+  }
+  if (recognizer.state != UIGestureRecognizerStateBegan &&
+      recognizer.state != UIGestureRecognizerStateChanged) {
+    return;
+  }
+
+  // The scale is relative to the start of the gesture. Reset it so that each call reports the change
+  // since the last call.
+  CGFloat scale = recognizer.scale;
+  recognizer.scale = 1;
+  $Placeholder_Prefix$EbitenmobileviewUpdatePinchOnIOS(scale - 1);
 }
 
 - (void)updatePresses:(NSSet<UIPress *> *)presses {

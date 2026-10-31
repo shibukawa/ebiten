@@ -100,6 +100,11 @@ func UpdateTouchesOnIOS(phase int, ptr int64, x, y float64) {
 	}
 }
 
+// UpdatePinchOnIOS reports a pinch gesture as the change of the scale it asks for since the last call.
+func UpdatePinchOnIOS(delta float64) {
+	ui.Get().UpdatePinch(delta)
+}
+
 func UpdatePressesOnIOS(phase int, keyCode int, keyString string, modifierFlags int) {
 	inputMu.Lock()
 	defer inputMu.Unlock()

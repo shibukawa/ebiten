@@ -62,6 +62,17 @@ func (u *UserInterface) updateInputStateFromOutside(keys []KeyEvent, runes []run
 	}
 }
 
+func (u *UserInterface) updatePinchFromOutside(delta float64) {
+	u.mu.Lock()
+	defer u.mu.Unlock()
+
+	if !u.foreground.Load() {
+		return
+	}
+
+	u.inputState.PinchDelta += delta
+}
+
 func (u *UserInterface) updateInputStateForFrame(deviceScaleFactor float64) error {
 	u.mu.Lock()
 	defer u.mu.Unlock()
