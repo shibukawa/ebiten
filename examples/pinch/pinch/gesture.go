@@ -202,7 +202,8 @@ type GestureTracker struct {
 	//
 	// This is a fallback for touchpads whose pinches PinchDelta does not report, such as touchpads that are not
 	// precision touchpads on Windows: their drivers report a pinch as scrolling with the Control key, as many
-	// applications zoom with it. It works with a mouse wheel as well.
+	// applications zoom with it. It works with a mouse wheel as well. Browsers report a pinch on a touchpad
+	// with PinchDelta, so this is needed there only for drivers that press the Control key themselves.
 	//
 	// CtrlScrollAsPinch is false by default, as scrolling with the Control key can no longer be used for
 	// anything else, such as moving the view faster.

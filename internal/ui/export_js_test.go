@@ -17,3 +17,11 @@ package ui
 func IsShortcutChordForTest(ctrl, alt, meta, altGraph, isApple bool) bool {
 	return isShortcutChord(ctrl, alt, meta, altGraph, isApple)
 }
+
+func IsWheelPinchForTest(ctrlKey, controlKeyDown bool) bool {
+	return isWheelPinch(ctrlKey, controlKeyDown)
+}
+
+func WheelPinchDeltaForTest(scrollDeltaY float64) float64 {
+	return wheelPinchDelta(scrollDeltaY)
+}
